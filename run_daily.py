@@ -154,7 +154,7 @@ def _creds_from_env():
         from google.oauth2.credentials import Credentials
         from google.auth.transport.requests import Request
         info = token_json if isinstance(token_json, dict) else json.loads(token_json)
-        creds = Credentials.from_authorized_user_info(info, SCOPES)
+        creds = Credentials.from_authorized_user_info(info)   # use token's own granted scopes
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         print("Auth: user OAuth token from %s" %
@@ -177,7 +177,7 @@ def get_creds():
     creds = None
     if TOKEN_FILE.exists():
         try:
-            creds = Credentials.from_authorized_user_file(str(TOKEN_FILE), SCOPES)
+            creds = Credentials.from_authorized_user_file(str(TOKEN_FILE))   # use token's own granted scopes
         except (ValueError, KeyError) as e:
             print("ERROR: token_ventas.json is unreadable/corrupted (%s)." % e)
             print("Fix: re-run one-time sign-in ->  python run_daily.py --auth")
