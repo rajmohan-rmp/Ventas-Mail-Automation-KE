@@ -14,7 +14,7 @@ email:
   to:
     - raj.mohan@6dtech.co.in
   cc:
-    - hari.krishnan@6dtech.co.in
+    - hari.krishnan@6dtech.co.in,parvath.karthik@6dtech.co.in
   bcc: []
   # {report_date} is filled automatically (YYYY-MM-DD).
   subject_template: "Ventas Daily Dashboard | Airtel Kenya (KE) | {report_date} (Last 7 Days)"
