@@ -75,12 +75,12 @@ SCOPES     = _OAUTH.get("scopes") or ["https://www.googleapis.com/auth/gmail.rea
 _AUTH      = CONFIG.get("auth", {}) or {}
 CREDS_FILE = HERE / _AUTH.get("credentials_file", "credentials.json")
 TOKEN_FILE = HERE / _AUTH.get("token_file", "token_ventas.json")
-DRIVE_FOLDER_ID = _DRIVE.get("folder_id", "1yCgVqztLDc79kACnyA4y5WYQIGOEuEaj")
+DRIVE_FOLDER_ID = _DRIVE.get("folder_id", "1yKEVqztLDc79kACnyA4y5WYQIGOEuEaj")
 DRIVE_ENABLED   = bool(_DRIVE.get("upload", True))
 DEFAULT_TO = ",".join(_EMAIL.get("to", [])) or "raj.mohan@6dtech.co.in"
 DEFAULT_CC = ",".join(_EMAIL.get("cc", []))
 DEFAULT_BCC = ",".join(_EMAIL.get("bcc", []))
-SUBJECT_TMPL = _EMAIL.get("subject_template", "Ventas Daily Dashboard | Airtel Congo (CG) | {report_date} (Last 7 Days)")
+SUBJECT_TMPL = _EMAIL.get("subject_template", "Ventas Daily Dashboard | Airtel Kenya (KE) | {report_date} (Last 7 Days)")
 DEFAULT_QUERY = _GMAIL.get("search_query", 'subject:"VENTAS REPORT" has:attachment')
 GENERATOR  = HERE / "ventas_slide_generator.py"
 WORKDIR    = Path(os.environ.get("VENTAS_WORKDIR", str(HERE)))   # writable dir (Cloud Run: /tmp)
@@ -200,7 +200,7 @@ def get_creds():
                 print(f"ERROR: {CREDS_FILE} not found.")
                 sys.exit(1)
             flow = InstalledAppFlow.from_client_secrets_file(str(CREDS_FILE), SCOPES)
-            creds = flow.run_local_server(port=0)
+            creds = flow.run_local_server(port=0, access_type='offline', prompt='consent')
         TOKEN_FILE.write_text(creds.to_json())
         print(f"Token saved to {TOKEN_FILE}")
     return creds
@@ -398,7 +398,7 @@ def _email_html(report_date, drive_link=None, images=None):
     return f"""\
 <div style="font-family:Arial,sans-serif;color:#0A2A57;">
   <h2 style="color:#0E518C;margin-bottom:4px;">Ventas Daily Dashboard</h2>
-  <p style="margin:2px 0;color:#444;">Airtel Congo (CG) &nbsp;|&nbsp; Report date {report_date} &nbsp;|&nbsp; Last 7 days (excl. report day)</p>
+  <p style="margin:2px 0;color:#444;">Airtel Kenya (KE) &nbsp;|&nbsp; Report date {report_date} &nbsp;|&nbsp; Last 7 days (excl. report day)</p>
   <p>Please find the Ventas USDM 2.0 daily report below. The editable deck is attached.</p>
   {blocks}
   {link}
