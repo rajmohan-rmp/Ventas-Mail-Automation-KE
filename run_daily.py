@@ -341,6 +341,28 @@ def generate(csv_paths, report_date, out_path, png_path=None, table_png_path=Non
     return out_path
 
 
+# -- 2b. append the log-scale QUANTITY slide into the main deck (single merged file) --
+QTY_GENERATOR = HERE / "ventas_quantity_generator.py"
+
+def append_quantity_slide(csv_paths, report_date, deck_path, png_path=None):
+    """Append the log-scale quantity slide as the last slide of the main deck,
+    producing one merged .pptx. Returns True on success, False if skipped."""
+    if not QTY_GENERATOR.exists():
+        print("WARN: ventas_quantity_generator.py not found; skipping quantity slide.")
+        return False
+    args = [sys.executable, str(QTY_GENERATOR), "--csv-file"] + [str(p) for p in csv_paths]
+    args += ["--date", report_date, "--append-to", str(deck_path)]
+    if png_path:
+        args += ["--png", str(png_path)]
+    print("Appending quantity slide:", " ".join(args))
+    try:
+        subprocess.check_call(args, cwd=str(HERE))
+        return True
+    except Exception as e:
+        print(f"WARN: quantity slide append failed ({e}); continuing with main deck only.")
+        return False
+
+
 # -- 3. drive upload --
 def upload_drive(creds, path, folder_id=DRIVE_FOLDER_ID):
     from googleapiclient.http import MediaFileUpload
@@ -356,7 +378,7 @@ def upload_drive(creds, path, folder_id=DRIVE_FOLDER_ID):
 
 # -- 4. send email (inline slide image + pptx attachment) --
 def send_email(gmail, to_list, subject, html, attach_path,
-               cc_list=None, bcc_list=None, inline_imgs=None):
+               cc_list=None, bcc_list=None, inline_imgs=None, extra_attachments=None):
     outer = MIMEMultipart("mixed")
     outer["to"] = ", ".join(to_list)
     if cc_list:
@@ -375,11 +397,14 @@ def send_email(gmail, to_list, subject, html, attach_path,
             related.attach(img)
     outer.attach(related)
 
-    part = MIMEBase(*MIME_PPTX.split("/"))
-    part.set_payload(Path(attach_path).read_bytes())
-    encoders.encode_base64(part)
-    part.add_header("Content-Disposition", "attachment", filename=Path(attach_path).name)
-    outer.attach(part)
+    for ap in [attach_path] + list(extra_attachments or []):
+        if not ap or not Path(ap).exists():
+            continue
+        part = MIMEBase(*MIME_PPTX.split("/"))
+        part.set_payload(Path(ap).read_bytes())
+        encoders.encode_base64(part)
+        part.add_header("Content-Disposition", "attachment", filename=Path(ap).name)
+        outer.attach(part)
 
     raw = base64.urlsafe_b64encode(outer.as_bytes()).decode()
     sent = gmail.users().messages().send(userId="me", body={"raw": raw}).execute()
@@ -441,6 +466,12 @@ def main():
     generate(csvs, report_date, out,
              png_path=(None if args.no_image else png1),
              table_png_path=(None if args.no_image else png2))
+
+    # Merge the log-scale quantity slide into the main deck as the last slide, so the
+    # email carries ONE .pptx. The quantity slide is intentionally NOT embedded in the
+    # mail body (only the first two slide images are shown inline below).
+    qty_png = WORKDIR / f"Ventas_Quantity_{report_date}_slide.png"
+    append_quantity_slide(csvs, report_date, out, png_path=qty_png)
 
     images = []        # (cid, label, path) for inline embedding
     if not args.no_image:
