@@ -327,13 +327,13 @@ def make_chart(title, rows, col_bars, col_line, tmp_dir, report_date=None, palet
     bar_data={c:[_val(rows,d,c) for d in dates] for c in col_bars}
     line_data=[_val(rows,d,col_line) for d in dates]
 
-    fig,ax=plt.subplots(figsize=(7.5,6.5))  # matches reduced panel aspect ratio
+    fig,ax=plt.subplots(figsize=(7.5,7.3))  # taller so chart fills the slide panel
     fig.patch.set_facecolor(CHART_BG)
     ax.set_facecolor(CHART_BG2)
 
     # Pre-compute ylim so bar label threshold is available during plotting
     ymax_line=max(line_data) if any(v>0 for v in line_data) else 1
-    ylim_top=max(ymax_line*1.45,1)
+    ylim_top=max(ymax_line*1.18,1)
 
     n=len(col_bars)
     colors=(palette or STACK_COLORS)[:n]
@@ -374,17 +374,16 @@ def make_chart(title, rows, col_bars, col_line, tmp_dir, report_date=None, palet
     ax2.set_ylim(0, ylim_top)
 
     handles=[plt.Rectangle((0,0),1,1,color=c) for c in colors]
-    handles+=[plt.Line2D([0],[0],color=LYELLOW,lw=2,marker='o',ms=4)]
+    handles+=[plt.Line2D([0],[0],color=LYELLOW,lw=3,marker='o',ms=6)]
     ax.legend(handles,list(col_bars)+["Total"],
               loc='upper center',bbox_to_anchor=(0.5,-0.12),
               facecolor=CHART_BG,edgecolor='none',labelcolor='white',
-              fontsize=8,ncol=n+1,framealpha=0.5,
-              handlelength=1.0,handleheight=0.8,borderpad=0.4,columnspacing=0.8)
+              fontsize=14,ncol=n+1,framealpha=0.5,
+              handlelength=1.1,handleheight=1.0,borderpad=0.5,columnspacing=0.7)
 
-    plt.tight_layout(pad=0.4)
-    plt.subplots_adjust(bottom=0.20)
+    plt.subplots_adjust(left=0.035,right=0.985,top=0.91,bottom=0.16)
     path=tmp_dir/f"{title.replace(' ','_')}.png"
-    fig.savefig(str(path),dpi=200,bbox_inches='tight',facecolor=CHART_BG)
+    fig.savefig(str(path),dpi=200,facecolor=CHART_BG)
     plt.close(fig)
     return path
 
@@ -838,21 +837,22 @@ def generate_slide(html_list, report_date, output_path, data=None, png_path=None
                  [CARD_GREY,CARD_TEAL,CARD_RED])
 
         # ── Charts (3 panels) ─────────────────────────────────────────────────
-        CY=KY+KH+Inches(0.10); CH=(SH-CY-Inches(0.20))*0.80; CW=(SW-4*M)/3
+        CY=KY+KH+Inches(0.10); CH=(SH-CY-Inches(0.20))*0.96; CW=(SW-4*M)/3
         _rect(slide,M,            CY,CW,CH,fc=PANEL,rx=0.04)
         _rect(slide,M+CW+M,       CY,CW,CH,fc=PANEL,rx=0.04)
         _rect(slide,M+2*(CW+M),   CY,CW,CH,fc=PANEL,rx=0.04)
 
         PAD=Inches(0.12)
+        PICH=int(CH-2*PAD)
         if pri_chart.exists():
             slide.shapes.add_picture(str(pri_chart),
-                int(M+PAD),int(CY+PAD),width=int(CW-2*PAD))
+                int(M+PAD),int(CY+PAD),width=int(CW-2*PAD),height=PICH)
         if pos_chart.exists():
             slide.shapes.add_picture(str(pos_chart),
-                int(M+CW+M+PAD),int(CY+PAD),width=int(CW-2*PAD))
+                int(M+CW+M+PAD),int(CY+PAD),width=int(CW-2*PAD),height=PICH)
         if st_chart.exists():
             slide.shapes.add_picture(str(st_chart),
-                int(M+2*(CW+M)+PAD),int(CY+PAD),width=int(CW-2*PAD))
+                int(M+2*(CW+M)+PAD),int(CY+PAD),width=int(CW-2*PAD),height=PICH)
 
         # ── Footer ───────────────────────────────────────────────────────────
         _rect(slide,0,SH-Inches(0.27),SW,Inches(0.27),fc=CARD_BLUE)
