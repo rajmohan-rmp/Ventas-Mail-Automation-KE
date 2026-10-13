@@ -13,7 +13,7 @@ gmail:
 email:
   to:
     - raj.mohan@6dtech.co.in
-  cc:
+  cc: []
     #- hari.krishnan@6dtech.co.in,parvath.karthik@6dtech.co.in,abhinav.krishnan@6dtech.co.in,rajneesh.singh@6dtech.co.in,narendhar.singh@6dtech.co.in,chandrakantbharat.korukonda@6dtech.co.in,k.chaitanya@6dtech.co.in,shivaprasad.thalari@6dtech.co.in
   bcc: []
   # {report_date} is filled automatically (YYYY-MM-DD).
