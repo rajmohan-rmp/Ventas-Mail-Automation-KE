@@ -34,7 +34,7 @@ drive:
 # --- Report window ----------------------------------------------------------
 report:
   window_days: 7          # number of trailing days shown
-  exclude_report_day: true  # window ends the day BEFORE the report date
+  exclude_report_day: false  # window ends the day BEFORE the report date
 
 # --- Branding shown on the slides -------------------------------------------
 # Country + country_code are the SINGLE place that sets the operator name.
