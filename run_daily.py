@@ -106,6 +106,8 @@ INLINE_CID2 = "ventas_slide2"
 INLINE_CIDQ = "ventas_quantity"
 # Show the quantity slide image in the mail body too? (it is always in the attached deck)
 QTY_IN_BODY = bool(_EMAIL.get("include_quantity_in_body", False))
+# Add the quantity slide to the deck at all? (config.yaml: email.include_quantity_slide)
+QTY_SLIDE = bool(_EMAIL.get("include_quantity_slide", True))
 
 
 def check_connectivity(timeout=8):
@@ -486,7 +488,10 @@ def main():
     # email carries ONE .pptx. The quantity slide is in the attached deck either way;
     # whether it ALSO appears in the mail body is controlled by email.include_quantity_in_body.
     qty_png = WORKDIR / f"Ventas_Quantity_{report_date}_slide.png"
-    append_quantity_slide(csvs, report_date, out, png_path=qty_png)
+    if QTY_SLIDE:
+        append_quantity_slide(csvs, report_date, out, png_path=qty_png)
+    else:
+        print("Quantity slide disabled (email.include_quantity_slide: false).")
 
     images = []        # (cid, label, path) for inline embedding
     if not args.no_image:
@@ -494,7 +499,7 @@ def main():
             slide_to_png(out, png1)   # fallback to PowerPoint/LibreOffice for slide 1
         if png1.exists(): images.append((INLINE_CID1, "Daily Dashboard", png1))
         if png2.exists(): images.append((INLINE_CID2, "Weekly Transaction Trend", png2))
-        if QTY_IN_BODY and qty_png.exists():
+        if QTY_SLIDE and QTY_IN_BODY and qty_png.exists():
             images.append((INLINE_CIDQ, "Quantity Dashboard", qty_png))
         print("Inline images:", [str(p) for _,_,p in images])
 
