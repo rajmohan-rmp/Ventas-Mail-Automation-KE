@@ -18,7 +18,7 @@ email:
   bcc: []
   # {report_date} and {customer} are filled automatically. {customer} comes from
   # branding.country / branding.country_code below, so you don't repeat the name here.
-  subject_template: "Ventas Daily Dashboard | {customer} | {report_date} (Last 7 Days)"
+  subject_template: "USDM 2.0 Performance Reporting | {customer} | {report_date} (Last 7 Days)"
   # The quantity (log-scale) slide is always inside the attached deck. Set this to true
   # to ALSO show its image in the mail body; false = attachment only (default).
   include_quantity_in_body: false
