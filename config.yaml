@@ -22,6 +22,9 @@ email:
   # The quantity (log-scale) slide is always inside the attached deck. Set this to true
   # to ALSO show its image in the mail body; false = attachment only (default).
   include_quantity_in_body: false
+  # Set to false to leave the quantity slide out completely (no slide in the deck,
+  # no image in the mail). true = add it as the last slide of the deck.
+  include_quantity_slide: false
 
 # --- Google Drive upload ----------------------------------------------------
 drive:
