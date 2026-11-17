@@ -50,7 +50,8 @@ def _window(report_date):
     # always cover the identical dates: last 7 days, excluding the report day
     # (report_date - 1 back through report_date - 7). The main generator hardcodes
     # this and does not read config, so neither do we.
-    end = datetime.strptime(report_date,"%Y-%m-%d") - timedelta(days=1)
+    excl = 1 if ((_cfg().get("report") or {}).get("exclude_report_day", True)) else 0
+    end = datetime.strptime(report_date,"%Y-%m-%d") - timedelta(days=excl)
     return [(end-timedelta(days=6-i)).strftime("%Y-%m-%d") for i in range(7)]
 
 # metric spec: classify label -> (display title, quantity column, bar colour)

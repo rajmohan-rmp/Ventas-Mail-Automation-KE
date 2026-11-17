@@ -440,7 +440,7 @@ def _email_html(report_date, drive_link=None, images=None):
     return f"""\
 <div style="font-family:Arial,sans-serif;color:#0A2A57;">
   <h2 style="color:#0E518C;margin-bottom:4px;">Ventas Daily Dashboard</h2>
-  <p style="margin:2px 0;color:#444;">{CUSTOMER} &nbsp;|&nbsp; Report date {report_date} &nbsp;|&nbsp; Last 7 days (excl. report day)</p>
+  <p style="margin:2px 0;color:#444;">{CUSTOMER} &nbsp;|&nbsp; Report date {report_date} &nbsp;|&nbsp; {"Last 7 days (excl. report day)" if (CONFIG.get("report") or {}).get("exclude_report_day", True) else "Last 7 days (incl. report day)"}</p>
   <p>Please find the Ventas USDM 2.0 daily report below. The editable deck is attached.</p>
   {blocks}
   {link}
