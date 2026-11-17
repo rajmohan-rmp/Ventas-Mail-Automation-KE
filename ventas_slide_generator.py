@@ -92,6 +92,12 @@ def customer_name(cfg=None):
 
 CUSTOMER = customer_name()
 
+# ── Report window (config.yaml: report.exclude_report_day) ───────────────────
+# true  -> 7 days ending report_date-1 (source mail carries data up to D-1)
+# false -> 7 days ending ON report_date (source mail now includes the current day)
+EXCL_DAY = 1 if ((load_config().get("report") or {}).get("exclude_report_day", True)) else 0
+WINDOW_LABEL = "Last 7 Days (excl. report day)" if EXCL_DAY else "Last 7 Days (incl. report day)"
+
 # ── Parsing ───────────────────────────────────────────────────────────────────
 def parse_html(html):
     soup = BeautifulSoup(html,"html.parser")
@@ -324,7 +330,7 @@ def csv_to_data(csv_paths, report_date=""):
     # matches the chart window.
     try:
         end=datetime.strptime(rd,"%Y-%m-%d")
-        win={(end-timedelta(days=i)).strftime("%Y-%m-%d") for i in range(1,8)}  # exclude report day
+        win={(end-timedelta(days=i)).strftime("%Y-%m-%d") for i in range(EXCL_DAY,EXCL_DAY+7)}  # window per EXCL_DAY
         for key in list(data.keys()):
             if key=="report_date": continue
             tbl=data[key]
@@ -339,7 +345,7 @@ def make_chart(title, rows, col_bars, col_line, tmp_dir, report_date=None, palet
     # Always show a 7-day window; zero-fill dates with no data
     if report_date:
         try:
-            end=datetime.strptime(report_date,"%Y-%m-%d")-timedelta(days=1)  # exclude report day
+            end=datetime.strptime(report_date,"%Y-%m-%d")-timedelta(days=EXCL_DAY)  # exclude report day
             dates=[(end-timedelta(days=6-i)).strftime("%Y-%m-%d") for i in range(7)]
         except:
             dates=_dates(rows) or ["No data"]
@@ -413,7 +419,7 @@ def make_chart(title, rows, col_bars, col_line, tmp_dir, report_date=None, palet
 def _draw_chart_ax(ax, title, rows, col_bars, col_line, report_date=None, palette=None):
     if report_date:
         try:
-            end=datetime.strptime(report_date,"%Y-%m-%d")-timedelta(days=1)
+            end=datetime.strptime(report_date,"%Y-%m-%d")-timedelta(days=EXCL_DAY)
             dates=[(end-timedelta(days=6-i)).strftime("%Y-%m-%d") for i in range(7)]
         except Exception:
             dates=_dates(rows) or ["No data"]
@@ -463,7 +469,7 @@ def render_dashboard_png(data, report_date, out_png, dpi=150):
     from matplotlib.patches import Rectangle
     rd=report_date or data.get("report_date")
     st =data.get("Stock Transfer Summary",[]); pos=data.get("POS Sales Summary",[]); pri=data.get("Primary Sales Summary",[])
-    try: last_day=(datetime.strptime(rd,"%Y-%m-%d")-timedelta(days=1)).strftime("%Y-%m-%d")
+    try: last_day=(datetime.strptime(rd,"%Y-%m-%d")-timedelta(days=EXCL_DAY)).strftime("%Y-%m-%d")
     except Exception: last_day=rd
     v=_val; TEAL="#1172B8"; RED="#C0392B"; GREY="#34495E"
     def trip(rows,d): return [("Completed" if False else "", )]
@@ -586,7 +592,7 @@ def render_table_png(data, rd, out_png, dpi=150):
     matplotlib only (no LibreOffice). Mirrors the PPTX table styling."""
     st =data.get("Stock Transfer Summary",[]); pos=data.get("POS Sales Summary",[]); pri=data.get("Primary Sales Summary",[])
     try:
-        end=datetime.strptime(rd,"%Y-%m-%d")-timedelta(days=1)
+        end=datetime.strptime(rd,"%Y-%m-%d")-timedelta(days=EXCL_DAY)
         dates=[(end-timedelta(days=6-i)).strftime("%Y-%m-%d") for i in range(7)]
     except Exception:
         dates=sorted(set(_dates(pri)+_dates(pos)+_dates(st)))
@@ -624,7 +630,7 @@ def render_table_png(data, rd, out_png, dpi=150):
 
     fig=plt.figure(figsize=(13.333,7.5),dpi=dpi); fig.patch.set_facecolor("#06224A")
     fig.text(0.012,0.965,"Weekly Transaction Trend Report",color="white",fontsize=21,fontweight="bold",ha="left",va="center")
-    fig.text(0.012,0.933,"%s    |    Report Date: %s    |    Last 7 Days (excl. report day)"%(CUSTOMER,_short_date_long(rd)),
+    fig.text(0.012,0.933,"%s    |    Report Date: %s    |    %s"%(CUSTOMER,_short_date_long(rd),WINDOW_LABEL),
              color="#B0C4DE",fontsize=10,ha="left",va="center")
     fig.text(0.988,0.95,"6D Technologies",color="white",fontsize=13,fontweight="bold",ha="right",va="center")
     ax=fig.add_axes([0.008,0.02,0.984,0.88]); ax.axis("off")
@@ -650,7 +656,7 @@ def add_trend_table_slide(prs, data, rd):
     from pptx.enum.text import MSO_ANCHOR
     st =data.get("Stock Transfer Summary",[]); pos=data.get("POS Sales Summary",[]); pri=data.get("Primary Sales Summary",[])
     try:
-        end=datetime.strptime(rd,"%Y-%m-%d")-timedelta(days=1)
+        end=datetime.strptime(rd,"%Y-%m-%d")-timedelta(days=EXCL_DAY)
         dates=[(end-timedelta(days=6-i)).strftime("%Y-%m-%d") for i in range(7)]
     except Exception:
         dates=sorted(set(_dates(pri)+_dates(pos)+_dates(st)))
@@ -661,7 +667,7 @@ def add_trend_table_slide(prs, data, rd):
     if bp.exists(): slide.shapes.add_picture(str(bp),0,0,SW,HDR_H)
     else: _rect(slide,0,0,SW,HDR_H,fc=CARD_BLUE)
     _txt(slide,"Weekly Transaction Trend Report",Inches(0.25),Inches(0.08),Inches(10),Inches(0.4),sz=20,bold=True)
-    _txt(slide,f"{CUSTOMER}   |   Report Date: {_short_date_long(rd)}   |   Last 7 Days (excl. report day)",
+    _txt(slide,f"{CUSTOMER}   |   Report Date: {_short_date_long(rd)}   |   {WINDOW_LABEL}",
          Inches(0.25),Inches(0.40),Inches(10),Inches(0.18),sz=8.5,col=LGREY)
     lg=_asset("6d-logo-white.png")
     if lg.exists():
@@ -762,7 +768,7 @@ def generate_slide(html_list, report_date, output_path, data=None, png_path=None
     pri=data.get("Primary Sales Summary",[])
 
     # KPI "LAST DAY" = report day - 1 (the report-generation day is excluded)
-    try: last_day=(datetime.strptime(rd,"%Y-%m-%d")-timedelta(days=1)).strftime("%Y-%m-%d")
+    try: last_day=(datetime.strptime(rd,"%Y-%m-%d")-timedelta(days=EXCL_DAY)).strftime("%Y-%m-%d")
     except: last_day=rd
     st_td=pos_td=pri_td=last_day
 
